@@ -1,0 +1,25 @@
+name: Hugging Face Space Health Check
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+
+jobs:
+  health-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install dependencies
+        run: pip install huggingface_hub
+      - name: Check Space and restart if necessary
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          python <<'PY'
+          import os
+          from huggingface_hub import HfApi
+
+          api = HfApi(token=os.environ["HF_TOKEN"])
+
+          if api.get_space_runtime("nllg/DeTikZify").stage.endswith("ERROR"):
+              api.restart_space("nllg/DeTikZify")
+          PY
